@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulačka 3D tlače</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1b; --muted: #6b6a66;
+    --border: #e2e0da; --accent: #fa6831; --accent-soft: #fde6dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151514; --card: #1f1f1d; --text: #ecebe7; --muted: #9a9892;
+      --border: #33322f; --accent: #ff7a47; --accent-soft: #3a2419;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  fieldset { border: 0; padding: 0; margin: 0 0 20px; }
+  legend { font-weight: 600; margin-bottom: 10px; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: .875rem; color: var(--muted); }
+  input, select {
+    font: inherit; color: var(--text); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .result { position: sticky; top: 16px; }
+  .total { font-size: 2.2rem; font-weight: 700; color: var(--accent); margin: 4px 0 16px; font-variant-numeric: tabular-nums; }
+  .rows div { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .rows div:last-child { border-bottom: 0; }
+  .rows span:first-child { color: var(--muted); }
+  .bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 16px 0 4px; background: var(--border); }
+  .bar i { display: block; height: 100%; }
+  .note { font-size: .8rem; color: var(--muted); margin-top: 12px; }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--accent-soft);
+    color: var(--text); border-radius: 8px; padding: 8px 12px; margin-top: 12px; width: 100%;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Kalkulačka ceny 3D tlače</h1>
+  <p class="sub">Spočíta náklady na jeden výtlačok: materiál, elektrinu, opotrebenie tlačiarne a maržu.</p>
+
+  <div class="grid">
+    <form class="card" id="form" autocomplete="off">
+      <fieldset>
+        <legend>Výtlačok</legend>
+        <div class="fields">
+          <label>Hmotnosť modelu (g)<input type="number" id="weight" value="120" min="0" step="1"></label>
+          <label>Čas tlače (h)<input type="number" id="hours" value="6" min="0" step="0.1"></label>
+          <label>Počet kusov<input type="number" id="qty" value="1" min="1" step="1"></label>
+          <label>Zlyhané tlače (%)<input type="number" id="fail" value="5" min="0" max="100" step="1"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Materiál</legend>
+        <div class="fields">
+          <label>Typ
+            <select id="material">
+              <option value="25">PLA</option>
+              <option value="28">PETG</option>
+              <option value="30">ASA</option>
+              <option value="38">TPU</option>
+              <option value="55">PC Blend</option>
+              <option value="custom">Vlastná cena</option>
+            </select>
+          </label>
+          <label>Cena cievky (€ / kg)<input type="number" id="spool" value="25" min="0" step="0.5"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Tlačiareň a energia</legend>
+        <div class="fields">
+          <label>Príkon (W)<input type="number" id="watts" value="120" min="0" step="5"></label>
+          <label>Cena elektriny (€ / kWh)<input type="number" id="kwh" value="0.20" min="0" step="0.01"></label>
+          <label>Cena tlačiarne (€)<input type="number" id="printer" value="1000" min="0" step="10"></label>
+          <label>Životnosť (h)<input type="number" id="life" value="5000" min="1" step="100"></label>
+        </div>
+      </fieldset>
+
+      <fieldset style="margin-bottom:0">
+        <legend>Predaj</legend>
+        <div class="fields">
+          <label>Práca (€ / ks)<input type="number" id="labor" value="2" min="0" step="0.5"></label>
+          <label>Marža (%)<input type="number" id="margin" value="30" min="0" step="1"></label>
+        </div>
+      </fieldset>
+    </form>
+
+    <aside class="card result" aria-live="polite">
+      <div style="color:var(--muted);font-size:.875rem">Predajná cena za kus</div>
+      <div class="total" id="total">–</div>
+      <div class="bar" id="bar"></div>
+      <div class="rows" id="rows"></div>
+      <div class="note" id="note"></div>
+      <button type="button" id="reset">Obnoviť predvolené hodnoty</button>
+    </aside>
+  </div>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const ids = ["weight","hours","qty","fail","material","spool","watts","kwh","printer","life","labor","margin"];
+  const defaults = Object.fromEntries(ids.map(id => [id, $(id).value]));
+  const eur = n => n.toLocaleString("sk-SK", { style: "currency", currency: "EUR" });
+  const num = id => Math.max(0, parseFloat($(id).value) || 0);
+  const colors = ["#fa6831", "#3b82f6", "#8b5cf6", "#10b981"];
+
+  try {
+    const saved = JSON.parse(localStorage.getItem("print-calc") || "{}");
+    ids.forEach(id => { if (saved[id] != null) $(id).value = saved[id]; });
+  } catch (e) {}
+
+  function calc() {
+    const failFactor = 1 / (1 - Math.min(num("fail"), 95) / 100);
+    const material = num("weight") / 1000 * num("spool") * failFactor;
+    const energy = num("watts") / 1000 * num("hours") * num("kwh") * failFactor;
+    const wear = num("printer") / Math.max(1, num("life")) * num("hours") * failFactor;
+    const labor = num("labor");
+    const cost = material + energy + wear + labor;
+    const price = cost * (1 + num("margin") / 100);
+    const qty = Math.max(1, Math.round(num("qty")));
+
+    const parts = [["Materiál", material], ["Elektrina", energy], ["Opotrebenie", wear], ["Práca", labor]];
+    $("total").textContent = eur(price);
+    $("bar").innerHTML = parts.map(([n, v], i) =>
+      `<i title="${n}" style="width:${cost ? v / cost * 100 : 0}%;background:${colors[i]}"></i>`).join("");
+    $("rows").innerHTML = parts.map(([n, v], i) =>
+      `<div><span><b style="color:${colors[i]}">■</b> ${n}</span><span>${eur(v)}</span></div>`).join("") +
+      `<div><span>Náklady spolu</span><span>${eur(cost)}</span></div>` +
+      `<div><span>Zisk / ks</span><span>${eur(price - cost)}</span></div>` +
+      `<div><b>Spolu za ${qty} ks</b><b>${eur(price * qty)}</b></div>`;
+    $("note").textContent = `Započítaná rezerva na zlyhané tlače: ×${failFactor.toFixed(2)}.`;
+
+    try { localStorage.setItem("print-calc", JSON.stringify(Object.fromEntries(ids.map(id => [id, $(id).value])))); } catch (e) {}
+  }
+
+  $("material").addEventListener("change", e => {
+    if (e.target.value !== "custom") $("spool").value = e.target.value;
+  });
+  $("spool").addEventListener("input", () => {
+    const opt = [...$("material").options].find(o => o.value === $("spool").value);
+    $("material").value = opt ? opt.value : "custom";
+  });
+  $("form").addEventListener("input", calc);
+  $("material").addEventListener("change", calc);
+  $("reset").addEventListener("click", () => { ids.forEach(id => $(id).value = defaults[id]); calc(); });
+  calc();
+</script>
+</body>
+</html>
