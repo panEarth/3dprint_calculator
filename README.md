@@ -1,8 +1,8 @@
 # testapp
-Testovaci aplikace
+Test application
 
-## Kalkulačka ceny 3D tlače
+## 3D Print Cost Calculator
 
-Statická webaplikácia (`index.html`), ktorá spočíta cenu výtlačku: materiál, elektrinu, opotrebenie tlačiarne, prácu a maržu. Hodnoty si pamätá v prehliadači.
+A static web app (`index.html`) that calculates the price of a print: material, electricity, printer wear, labor and margin. Your inputs are remembered in the browser.
 
-Živá verzia: https://panearth.github.io/testapp/
+Live version: https://panearth.github.io/testapp/

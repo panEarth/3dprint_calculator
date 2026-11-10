@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="sk">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kalkulačka 3D tlače</title>
+<title>3D Print Calculator</title>
 <style>
   :root {
     --bg: #f6f5f2; --card: #ffffff; --text: #1d1d1b; --muted: #6b6a66;
@@ -51,64 +51,64 @@
 </head>
 <body>
 <main>
-  <h1>Kalkulačka ceny 3D tlače</h1>
-  <p class="sub">Spočíta náklady na jeden výtlačok: materiál, elektrinu, opotrebenie tlačiarne a maržu.</p>
+  <h1>3D Print Cost Calculator</h1>
+  <p class="sub">Calculates the cost of a single print: material, electricity, printer wear and margin.</p>
 
   <div class="grid">
     <form class="card" id="form" autocomplete="off">
       <fieldset>
-        <legend>Výtlačok</legend>
+        <legend>Print</legend>
         <div class="fields">
-          <label>Hmotnosť modelu (g)<input type="number" id="weight" value="120" min="0" step="1"></label>
-          <label>Čas tlače (h)<input type="number" id="hours" value="6" min="0" step="0.1"></label>
-          <label>Počet kusov<input type="number" id="qty" value="1" min="1" step="1"></label>
-          <label>Zlyhané tlače (%)<input type="number" id="fail" value="5" min="0" max="100" step="1"></label>
+          <label>Model weight (g)<input type="number" id="weight" value="120" min="0" step="1"></label>
+          <label>Print time (h)<input type="number" id="hours" value="6" min="0" step="0.1"></label>
+          <label>Quantity<input type="number" id="qty" value="1" min="1" step="1"></label>
+          <label>Failed prints (%)<input type="number" id="fail" value="5" min="0" max="100" step="1"></label>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Materiál</legend>
+        <legend>Material</legend>
         <div class="fields">
-          <label>Typ
+          <label>Type
             <select id="material">
               <option value="25">PLA</option>
               <option value="28">PETG</option>
               <option value="30">ASA</option>
               <option value="38">TPU</option>
               <option value="55">PC Blend</option>
-              <option value="custom">Vlastná cena</option>
+              <option value="custom">Custom price</option>
             </select>
           </label>
-          <label>Cena cievky (€ / kg)<input type="number" id="spool" value="25" min="0" step="0.5"></label>
+          <label>Spool price (€ / kg)<input type="number" id="spool" value="25" min="0" step="0.5"></label>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Tlačiareň a energia</legend>
+        <legend>Printer &amp; energy</legend>
         <div class="fields">
-          <label>Príkon (W)<input type="number" id="watts" value="120" min="0" step="5"></label>
-          <label>Cena elektriny (€ / kWh)<input type="number" id="kwh" value="0.20" min="0" step="0.01"></label>
-          <label>Cena tlačiarne (€)<input type="number" id="printer" value="1000" min="0" step="10"></label>
-          <label>Životnosť (h)<input type="number" id="life" value="5000" min="1" step="100"></label>
+          <label>Power draw (W)<input type="number" id="watts" value="120" min="0" step="5"></label>
+          <label>Electricity price (€ / kWh)<input type="number" id="kwh" value="0.20" min="0" step="0.01"></label>
+          <label>Printer price (€)<input type="number" id="printer" value="1000" min="0" step="10"></label>
+          <label>Lifespan (h)<input type="number" id="life" value="5000" min="1" step="100"></label>
         </div>
       </fieldset>
 
       <fieldset style="margin-bottom:0">
-        <legend>Predaj</legend>
+        <legend>Sales</legend>
         <div class="fields">
-          <label>Práca (€ / ks)<input type="number" id="labor" value="2" min="0" step="0.5"></label>
-          <label>Marža (%)<input type="number" id="margin" value="30" min="0" step="1"></label>
+          <label>Labor (€ / pc)<input type="number" id="labor" value="2" min="0" step="0.5"></label>
+          <label>Margin (%)<input type="number" id="margin" value="30" min="0" step="1"></label>
         </div>
       </fieldset>
     </form>
 
     <aside class="card result" aria-live="polite">
-      <div style="color:var(--muted);font-size:.875rem">Predajná cena za kus</div>
+      <div style="color:var(--muted);font-size:.875rem">Selling price per piece</div>
       <div class="total" id="total">–</div>
       <div class="bar" id="bar"></div>
       <div class="rows" id="rows"></div>
       <div class="note" id="note"></div>
-      <button type="button" id="reset">Obnoviť predvolené hodnoty</button>
+      <button type="button" id="reset">Reset to defaults</button>
     </aside>
   </div>
 </main>
@@ -117,7 +117,7 @@
   const $ = id => document.getElementById(id);
   const ids = ["weight","hours","qty","fail","material","spool","watts","kwh","printer","life","labor","margin"];
   const defaults = Object.fromEntries(ids.map(id => [id, $(id).value]));
-  const eur = n => n.toLocaleString("sk-SK", { style: "currency", currency: "EUR" });
+  const eur = n => n.toLocaleString("en-IE", { style: "currency", currency: "EUR" });
   const num = id => Math.max(0, parseFloat($(id).value) || 0);
   const colors = ["#fa6831", "#3b82f6", "#8b5cf6", "#10b981"];
 
@@ -136,16 +136,16 @@
     const price = cost * (1 + num("margin") / 100);
     const qty = Math.max(1, Math.round(num("qty")));
 
-    const parts = [["Materiál", material], ["Elektrina", energy], ["Opotrebenie", wear], ["Práca", labor]];
+    const parts = [["Material", material], ["Electricity", energy], ["Printer wear", wear], ["Labor", labor]];
     $("total").textContent = eur(price);
     $("bar").innerHTML = parts.map(([n, v], i) =>
       `<i title="${n}" style="width:${cost ? v / cost * 100 : 0}%;background:${colors[i]}"></i>`).join("");
     $("rows").innerHTML = parts.map(([n, v], i) =>
       `<div><span><b style="color:${colors[i]}">■</b> ${n}</span><span>${eur(v)}</span></div>`).join("") +
-      `<div><span>Náklady spolu</span><span>${eur(cost)}</span></div>` +
-      `<div><span>Zisk / ks</span><span>${eur(price - cost)}</span></div>` +
-      `<div><b>Spolu za ${qty} ks</b><b>${eur(price * qty)}</b></div>`;
-    $("note").textContent = `Započítaná rezerva na zlyhané tlače: ×${failFactor.toFixed(2)}.`;
+      `<div><span>Total cost</span><span>${eur(cost)}</span></div>` +
+      `<div><span>Profit / pc</span><span>${eur(price - cost)}</span></div>` +
+      `<div><b>Total for ${qty} pcs</b><b>${eur(price * qty)}</b></div>`;
+    $("note").textContent = `Includes a failed-print allowance: ×${failFactor.toFixed(2)}.`;
 
     try { localStorage.setItem("print-calc", JSON.stringify(Object.fromEntries(ids.map(id => [id, $(id).value])))); } catch (e) {}
   }
